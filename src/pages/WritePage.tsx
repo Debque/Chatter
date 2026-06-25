@@ -1,13 +1,34 @@
 import { useState } from 'react'
+import { useAuth } from '../hooks/useAuth'
+import { useAutosave } from '../hooks/useAutosave'
 import Editor from '../components/editor/Editor'
 
 export default function WritePage() {
+  const { user } = useAuth()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+
+  const { saving, lastSaved } = useAutosave({
+    postId: null,
+    title,
+    content,
+    authorId: user?.id ?? '',
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto py-12 px-4">
+
+        {/* Save status */}
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-xs text-gray-400">
+            {saving
+              ? 'Saving...'
+              : lastSaved
+              ? `Last saved at ${lastSaved.toLocaleTimeString()}`
+              : 'Not saved yet'}
+          </span>
+        </div>
 
         {/* Title input */}
         <input
@@ -20,12 +41,6 @@ export default function WritePage() {
 
         {/* Editor */}
         <Editor content={content} onChange={setContent} />
-
-        {/* Debug — remove later */}
-        <div className="mt-6 p-4 bg-white border border-gray-200 rounded-xl">
-          <p className="text-xs text-gray-400 mb-2">HTML output preview:</p>
-          <p className="text-sm text-gray-600 break-all">{content}</p>
-        </div>
 
       </div>
     </div>
