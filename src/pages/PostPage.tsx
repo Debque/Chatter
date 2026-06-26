@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Heart, Bookmark } from 'lucide-react'
+import { Heart, Bookmark, UserPlus, UserCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLike } from '../hooks/useLike'
 import { useBookmark } from '../hooks/useBookmark'
+import { useFollow } from '../hooks/useFollow'
 import CommentSection from '../components/comments/CommentSection'
 import type { Post } from '../types'
 
@@ -41,6 +42,29 @@ function BookmarkButton({ postId }: { postId: string }) {
     >
       <Bookmark size={15} className={bookmarked ? 'fill-indigo-600' : ''} />
       <span>{bookmarked ? 'Saved' : 'Save'}</span>
+    </button>
+  )
+}
+
+function FollowButton({ authorId }: { authorId: string }) {
+  const { following, toggleFollow, loading, isOwnProfile } = useFollow(authorId)
+
+  if (isOwnProfile) return null
+
+  return (
+    <button
+      onClick={toggleFollow}
+      disabled={loading}
+      className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+        following
+          ? 'bg-gray-50 border-gray-200 text-gray-600'
+          : 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700'
+      }`}
+    >
+      {following
+        ? <><UserCheck size={15} /> Following</>
+        : <><UserPlus size={15} /> Follow</>
+      }
     </button>
   )
 }
@@ -109,20 +133,23 @@ export default function PostPage() {
           {post.title}
         </h1>
 
-        {/* Meta */}
-        <div className="flex items-center gap-3 text-sm text-gray-400 mb-10">
-          {post.reading_time && (
-            <span>{post.reading_time} min read</span>
-          )}
-          {post.published_at && (
-            <span>
-              {new Date(post.published_at).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </span>
-          )}
+        {/* Meta + Follow */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-3 text-sm text-gray-400">
+            {post.reading_time && (
+              <span>{post.reading_time} min read</span>
+            )}
+            {post.published_at && (
+              <span>
+                {new Date(post.published_at).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+            )}
+          </div>
+          <FollowButton authorId={post.author_id} />
         </div>
 
         {/* Body */}
