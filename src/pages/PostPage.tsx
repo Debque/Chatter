@@ -1,29 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { Heart, Bookmark } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useLike } from '../hooks/useLike'
 import { useBookmark } from '../hooks/useBookmark'
-import type { Post } from '../types'
 import CommentSection from '../components/comments/CommentSection'
-
-function BookmarkButton({ postId }: { postId: string }) {
-  const { bookmarked, toggleBookmark, loading } = useBookmark(postId)
-
-  return (
-    <button
-      onClick={toggleBookmark}
-      disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
-        bookmarked
-          ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
-          : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-200 hover:text-indigo-400'
-      }`}
-    >
-      <span>{bookmarked ? '🔖' : '🔖'}</span>
-      <span>{bookmarked ? 'Saved' : 'Save'}</span>
-    </button>
-  )
-}
+import type { Post } from '../types'
 
 function LikeButton({ postId }: { postId: string }) {
   const { liked, count, toggleLike, loading } = useLike(postId)
@@ -38,8 +20,27 @@ function LikeButton({ postId }: { postId: string }) {
           : 'bg-white border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-400'
       }`}
     >
-      <span>{liked ? '❤️' : '🤍'}</span>
+      <Heart size={15} className={liked ? 'fill-red-500' : ''} />
       <span>{count}</span>
+    </button>
+  )
+}
+
+function BookmarkButton({ postId }: { postId: string }) {
+  const { bookmarked, toggleBookmark, loading } = useBookmark(postId)
+
+  return (
+    <button
+      onClick={toggleBookmark}
+      disabled={loading}
+      className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+        bookmarked
+          ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+          : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-200 hover:text-indigo-400'
+      }`}
+    >
+      <Bookmark size={15} className={bookmarked ? 'fill-indigo-600' : ''} />
+      <span>{bookmarked ? 'Saved' : 'Save'}</span>
     </button>
   )
 }
