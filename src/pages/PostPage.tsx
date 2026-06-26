@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLike } from '../hooks/useLike'
 import type { Post } from '../types'
+import CommentSection from '../components/comments/CommentSection'
 
 function LikeButton({ postId }: { postId: string }) {
   const { liked, count, toggleLike, loading } = useLike(postId)
@@ -110,9 +111,12 @@ export default function PostPage() {
         />
 
         {/* Like button */}
-        <div className="border-t border-gray-100 pt-8">
+        <div className="border-t border-gray-100 pt-8 mb-4">
           <LikeButton postId={post.id} />
         </div>
+
+        {/* Comments */}
+        <CommentSection postId={post.id} />
 
       </div>
     </div>
