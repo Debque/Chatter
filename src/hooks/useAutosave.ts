@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-
 
 interface AutosaveOptions {
   postId: string | null
@@ -19,36 +18,35 @@ export function useAutosave({
 }: AutosaveOptions) {
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [currentPostId, setCurrentPostId] = useState<string | null>(postId)
+  const postIdRef = useRef<string | null>(postId)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Generate a slug from the title
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .slice(0, 80)
-      + '-' + Date.now()
+  const generateSlug = (t: string) => {
+    return (
+      t.toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .slice(0, 80) +
+      '-' +
+      Date.now()
+    )
   }
 
-  // Calculate reading time from HTML content
   const calculateReadingTime = (html: string) => {
     const text = html.replace(/<[^>]+>/g, '')
     const words = text.trim().split(/\s+/).length
     return Math.ceil(words / 200)
   }
 
-  const save = async () => {
-    if (!title.trim() && !content.trim()) return
-    if (!authorId) return
+  const save = useCallback(async (): Promise<string | null> => {
+    if (!title.trim() && !content.trim()) return postIdRef.current
+    if (!authorId) return postIdRef.current
 
     setSaving(true)
 
     try {
-      if (currentPostId) {
-        // Update existing draft
+      if (postIdRef.current) {
         const { error } = await supabase
           .from('posts')
           .update({
@@ -57,11 +55,10 @@ export function useAutosave({
             reading_time: calculateReadingTime(content),
             updated_at: new Date().toISOString(),
           })
-          .eq('id', currentPostId)
+          .eq('id', postIdRef.current)
 
         if (error) throw error
       } else {
-        // Create new draft
         const { data, error } = await supabase
           .from('posts')
           .insert({
@@ -76,24 +73,25 @@ export function useAutosave({
           .single()
 
         if (error) throw error
-        setCurrentPostId(data.id)
+        postIdRef.current = data.id
       }
 
       setLastSaved(new Date())
+      return postIdRef.current
     } catch (err) {
       console.error('Autosave failed:', err)
+      return postIdRef.current
     } finally {
       setSaving(false)
     }
-  }
+  }, [title, content, authorId])
 
-  // Run autosave on interval
   useEffect(() => {
     timerRef.current = setInterval(save, interval)
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [title, content, currentPostId, authorId])
+  }, [save, interval])
 
-  return { saving, lastSaved, currentPostId, saveNow: save }
+  return { saving, lastSaved, saveNow: save }
 }
