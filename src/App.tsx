@@ -11,7 +11,10 @@ const PostPage      = lazy(() => import('./pages/PostPage'))
 const WritePage     = lazy(() => import('./pages/WritePage'))
 const ProfilePage   = lazy(() => import('./pages/ProfilePage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
 const NotFoundPage  = lazy(() => import('./pages/NotFoundPage'))
+
+
 
 function PageLoader() {
   return (
@@ -117,6 +120,18 @@ export default function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <DashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+
+            
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <NotificationsPage />
                 </AppLayout>
               </ProtectedRoute>
             }

@@ -1,9 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { Bell } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useNotifications } from '../hooks/useNotifications'
 
 export default function Navbar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const { unreadCount } = useNotifications()
 
   const handleSignOut = async () => {
     await signOut()
@@ -38,6 +41,19 @@ export default function Navbar() {
             className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
           >
             Dashboard
+          </Link>
+
+          {/* Notification bell */}
+          <Link
+            to="/notifications"
+            className="relative text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-indigo-600 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </Link>
 
           {/* Avatar → profile */}
