@@ -2,28 +2,36 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-export function useLike(postId: string, initialCount: number = 0) {
+export function useLike(postId: string) {
   const { user } = useAuth()
   const [liked, setLiked] = useState(false)
-  const [count, setCount] = useState(initialCount)
+  const [count, setCount] = useState(0)
   const [loading, setLoading] = useState(false)
 
-  // Check if current user has liked this post
   useEffect(() => {
-    if (!user) return
-
-    const checkLike = async () => {
-      const { data } = await supabase
+    const fetchLikes = async () => {
+      // Get total like count for this post
+      const { count: likeCount } = await supabase
         .from('likes')
-        .select('user_id')
+        .select('*', { count: 'exact', head: true })
         .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .single()
 
-      setLiked(!!data)
+      setCount(likeCount ?? 0)
+
+      // Check if current user has liked this post
+      if (user) {
+        const { data } = await supabase
+          .from('likes')
+          .select('user_id')
+          .eq('post_id', postId)
+          .eq('user_id', user.id)
+          .single()
+
+        setLiked(!!data)
+      }
     }
 
-    checkLike()
+    fetchLikes()
   }, [postId, user])
 
   const toggleLike = async () => {
@@ -31,7 +39,7 @@ export function useLike(postId: string, initialCount: number = 0) {
 
     setLoading(true)
 
-    // Optimistic update — update UI instantly before Supabase responds
+    // Optimistic update
     setLiked(prev => !prev)
     setCount(prev => liked ? prev - 1 : prev + 1)
 

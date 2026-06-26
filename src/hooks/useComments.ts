@@ -3,9 +3,17 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 import type { Comment } from '../types'
 
+export interface CommentWithProfile extends Comment {
+  profiles: {
+    username: string | null
+    full_name: string | null
+    avatar_url: string | null
+  } | null
+}
+
 export function useComments(postId: string) {
   const { user } = useAuth()
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setComments] = useState<CommentWithProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
 
@@ -16,7 +24,7 @@ export function useComments(postId: string) {
       try {
         const { data, error } = await supabase
           .from('comments')
-          .select('*')
+          .select('*, profiles(username, full_name, avatar_url)')
           .eq('post_id', postId)
           .order('created_at', { ascending: true })
 
@@ -48,12 +56,10 @@ export function useComments(postId: string) {
           parent_id: parentId,
           body: body.trim(),
         })
-        .select('*')
+        .select('*, profiles(username, full_name, avatar_url)')
         .single()
 
       if (error) throw error
-
-      // Add new comment to local state instantly
       setComments(prev => [...prev, data])
     } catch (err) {
       console.error('Failed to add comment:', err)
@@ -62,7 +68,6 @@ export function useComments(postId: string) {
     }
   }
 
-  // Split into top-level and replies
   const topLevel = comments.filter(c => c.parent_id === null)
   const replies = (parentId: string) =>
     comments.filter(c => c.parent_id === parentId)

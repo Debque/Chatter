@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { useComments } from '../../hooks/useComments'
-import type { Comment } from '../../types'
+import type { CommentWithProfile } from '../../hooks/useComments'
+
+function getInitial(profile: CommentWithProfile['profiles']) {
+  if (profile?.full_name) return profile.full_name[0].toUpperCase()
+  if (profile?.username) return profile.username[0].toUpperCase()
+  return '?'
+}
 
 function CommentForm({
   onSubmit,
@@ -48,29 +54,43 @@ function CommentItem({
   onReply,
   submitting,
 }: {
-  comment: Comment
-  replies: Comment[]
+  comment: CommentWithProfile
+  replies: CommentWithProfile[]
   onReply: (body: string, parentId: string) => void
   submitting: boolean
 }) {
   const [showReplyForm, setShowReplyForm] = useState(false)
+  const initial = getInitial(comment.profiles)
 
   return (
     <div className="flex flex-col gap-3">
       {/* Comment */}
       <div className="flex gap-3">
         <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-medium flex-shrink-0">
-          ?
+          {comment.profiles?.avatar_url ? (
+            <img
+              src={comment.profiles.avatar_url}
+              alt={initial}
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            initial
+          )}
         </div>
         <div className="flex-1">
           <div className="bg-gray-50 rounded-xl px-4 py-3">
-            <p className="text-xs text-gray-400 mb-1">
-              {new Date(comment.created_at).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-medium text-gray-700">
+                {comment.profiles?.full_name ?? comment.profiles?.username ?? 'Anonymous'}
+              </span>
+              <span className="text-xs text-gray-400">
+                {new Date(comment.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
             <p className="text-sm text-gray-700 leading-relaxed">{comment.body}</p>
           </div>
           <button
@@ -88,16 +108,29 @@ function CommentItem({
           {replies.map(reply => (
             <div key={reply.id} className="flex gap-3">
               <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-medium flex-shrink-0">
-                ?
+                {reply.profiles?.avatar_url ? (
+                  <img
+                    src={reply.profiles.avatar_url}
+                    alt={getInitial(reply.profiles)}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  getInitial(reply.profiles)
+                )}
               </div>
               <div className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
-                <p className="text-xs text-gray-400 mb-1">
-                  {new Date(reply.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </p>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-medium text-gray-700">
+                    {reply.profiles?.full_name ?? reply.profiles?.username ?? 'Anonymous'}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {new Date(reply.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
                 <p className="text-sm text-gray-700 leading-relaxed">{reply.body}</p>
               </div>
             </div>
