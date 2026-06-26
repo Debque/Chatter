@@ -1,7 +1,27 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useLike } from '../hooks/useLike'
 import type { Post } from '../types'
+
+function LikeButton({ postId }: { postId: string }) {
+  const { liked, count, toggleLike, loading } = useLike(postId)
+
+  return (
+    <button
+      onClick={toggleLike}
+      disabled={loading}
+      className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+        liked
+          ? 'bg-red-50 border-red-200 text-red-500'
+          : 'bg-white border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-400'
+      }`}
+    >
+      <span>{liked ? '❤️' : '🤍'}</span>
+      <span>{count}</span>
+    </button>
+  )
+}
 
 export default function PostPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -24,7 +44,6 @@ export default function PostPage() {
           .single()
 
         if (cancelled) return
-
         if (error) throw error
         setPost(data)
       } catch (err: unknown) {
@@ -37,10 +56,7 @@ export default function PostPage() {
     }
 
     fetchPost()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [slug])
 
   if (loading) {
@@ -89,9 +105,14 @@ export default function PostPage() {
 
         {/* Body */}
         <div
-          className="prose prose-indigo max-w-none"
+          className="prose prose-indigo max-w-none mb-12"
           dangerouslySetInnerHTML={{ __html: post.body }}
         />
+
+        {/* Like button */}
+        <div className="border-t border-gray-100 pt-8">
+          <LikeButton postId={post.id} />
+        </div>
 
       </div>
     </div>

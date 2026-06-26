@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import ProtectedRoute from './components/ProtectedRoute'
+import Navbar from './components/Navbar'
 
 const LandingPage   = lazy(() => import('./pages/LandingPage'))
 const LoginPage     = lazy(() => import('./pages/LoginPage'))
@@ -27,12 +28,23 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+// Layout wrapper for protected pages — includes the Navbar
+function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div>
+      <Navbar />
+      <main>{children}</main>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
 
+          {/* Public routes — no Navbar */}
           <Route
             path="/"
             element={
@@ -41,7 +53,6 @@ export default function App() {
               </PublicOnlyRoute>
             }
           />
-
           <Route
             path="/login"
             element={
@@ -51,42 +62,72 @@ export default function App() {
             }
           />
 
-          <Route path="/post/:slug" element={<PostPage />} />
+          {/* Post and profile — public but with Navbar */}
+          <Route
+            path="/post/:slug"
+            element={
+              <AppLayout>
+                <PostPage />
+              </AppLayout>
+            }
+          />
+          <Route
+            path="/profile/:username"
+            element={
+              <AppLayout>
+                <ProfilePage />
+              </AppLayout>
+            }
+          />
 
-          <Route path="/profile/:username" element={<ProfilePage />} />
-
+          {/* Protected routes — Navbar + auth guard */}
           <Route
             path="/feed"
             element={
               <ProtectedRoute>
-                <FeedPage />
+                <AppLayout>
+                  <FeedPage />
+                </AppLayout>
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/write"
             element={
               <ProtectedRoute>
-                <WritePage />
+                <AppLayout>
+                  <WritePage />
+                </AppLayout>
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/write/:id"
             element={
               <ProtectedRoute>
-                <WritePage />
+                <AppLayout>
+                  <WritePage />
+                </AppLayout>
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <AppLayout>
+                  <DashboardPage />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <ProfilePage />
+                </AppLayout>
               </ProtectedRoute>
             }
           />
