@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { Heart, Bookmark, UserPlus, UserCheck } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { useLike } from '../hooks/useLike'
 import { useBookmark } from '../hooks/useBookmark'
 import { useFollow } from '../hooks/useFollow'
@@ -10,7 +11,6 @@ import type { Post } from '../types'
 
 function LikeButton({ postId }: { postId: string }) {
   const { liked, count, toggleLike, loading } = useLike(postId)
-
   return (
     <button
       onClick={toggleLike}
@@ -29,7 +29,6 @@ function LikeButton({ postId }: { postId: string }) {
 
 function BookmarkButton({ postId }: { postId: string }) {
   const { bookmarked, toggleBookmark, loading } = useBookmark(postId)
-
   return (
     <button
       onClick={toggleBookmark}
@@ -48,9 +47,7 @@ function BookmarkButton({ postId }: { postId: string }) {
 
 function FollowButton({ authorId }: { authorId: string }) {
   const { following, toggleFollow, loading, isOwnProfile } = useFollow(authorId)
-
   if (isOwnProfile) return null
-
   return (
     <button
       onClick={toggleFollow}
@@ -71,13 +68,14 @@ function FollowButton({ authorId }: { authorId: string }) {
 
 export default function PostPage() {
   const { slug } = useParams<{ slug: string }>()
+  const { user } = useAuth()
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const viewTracked = useRef(false)
 
   useEffect(() => {
     if (!slug) return
-
     let cancelled = false
 
     const fetchPost = async () => {
@@ -105,6 +103,23 @@ export default function PostPage() {
     return () => { cancelled = true }
   }, [slug])
 
+  // Track view once per page load
+  useEffect(() => {
+    if (!post || viewTracked.current) return
+    viewTracked.current = true
+
+    const trackView = async () => {
+      await supabase
+        .from('post_views')
+        .insert({
+          post_id: post.id,
+          viewer_id: user?.id ?? null,
+        })
+    }
+
+    trackView()
+  }, [post, user])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -128,23 +143,17 @@ export default function PostPage() {
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto py-16 px-4">
 
-        {/* Title */}
         <h1 className="text-4xl font-bold text-gray-900 leading-tight mb-4">
           {post.title}
         </h1>
 
-        {/* Meta + Follow */}
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-3 text-sm text-gray-400">
-            {post.reading_time && (
-              <span>{post.reading_time} min read</span>
-            )}
+            {post.reading_time && <span>{post.reading_time} min read</span>}
             {post.published_at && (
               <span>
                 {new Date(post.published_at).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
+                  month: 'long', day: 'numeric', year: 'numeric',
                 })}
               </span>
             )}
@@ -152,19 +161,16 @@ export default function PostPage() {
           <FollowButton authorId={post.author_id} />
         </div>
 
-        {/* Body */}
         <div
           className="prose prose-indigo max-w-none mb-12"
           dangerouslySetInnerHTML={{ __html: post.body }}
         />
 
-        {/* Actions */}
         <div className="border-t border-gray-100 pt-8 mb-4 flex items-center gap-3">
           <LikeButton postId={post.id} />
           <BookmarkButton postId={post.id} />
         </div>
 
-        {/* Comments */}
         <CommentSection postId={post.id} />
 
       </div>
