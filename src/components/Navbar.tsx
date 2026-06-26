@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Bell } from 'lucide-react'
+import { Bell, Search } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useNotifications } from '../hooks/useNotifications'
 
@@ -26,6 +26,14 @@ export default function Navbar() {
         >
           Chatter
         </Link>
+
+        {/* Search */}
+        <Link
+            to="/search"
+            className="text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <Search size={18} />
+          </Link>
 
         {/* Right side */}
         <div className="flex items-center gap-3">

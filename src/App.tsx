@@ -12,6 +12,7 @@ const WritePage     = lazy(() => import('./pages/WritePage'))
 const ProfilePage   = lazy(() => import('./pages/ProfilePage'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
+const SearchPage = lazy(() => import('./pages/SearchPage'))
 const NotFoundPage  = lazy(() => import('./pages/NotFoundPage'))
 
 
@@ -134,6 +135,14 @@ export default function App() {
                   <NotificationsPage />
                 </AppLayout>
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <AppLayout>
+                <SearchPage />
+              </AppLayout>
             }
           />
           <Route
