@@ -2,8 +2,28 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useLike } from '../hooks/useLike'
+import { useBookmark } from '../hooks/useBookmark'
 import type { Post } from '../types'
 import CommentSection from '../components/comments/CommentSection'
+
+function BookmarkButton({ postId }: { postId: string }) {
+  const { bookmarked, toggleBookmark, loading } = useBookmark(postId)
+
+  return (
+    <button
+      onClick={toggleBookmark}
+      disabled={loading}
+      className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
+        bookmarked
+          ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+          : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-200 hover:text-indigo-400'
+      }`}
+    >
+      <span>{bookmarked ? '🔖' : '🔖'}</span>
+      <span>{bookmarked ? 'Saved' : 'Save'}</span>
+    </button>
+  )
+}
 
 function LikeButton({ postId }: { postId: string }) {
   const { liked, count, toggleLike, loading } = useLike(postId)
@@ -110,9 +130,10 @@ export default function PostPage() {
           dangerouslySetInnerHTML={{ __html: post.body }}
         />
 
-        {/* Like button */}
-        <div className="border-t border-gray-100 pt-8 mb-4">
+        {/* Actions */}
+        <div className="border-t border-gray-100 pt-8 mb-4 flex items-center gap-3">
           <LikeButton postId={post.id} />
+          <BookmarkButton postId={post.id} />
         </div>
 
         {/* Comments */}
